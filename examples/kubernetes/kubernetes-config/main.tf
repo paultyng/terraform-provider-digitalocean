@@ -15,32 +15,24 @@ terraform {
   }
 }
 
-data "digitalocean_kubernetes_cluster" "primary" {
-  name = var.cluster_name
-}
-
 resource "local_file" "kubeconfig" {
-  depends_on = [var.cluster_id]
+  depends_on = [var.primary_cluster]
   count      = var.write_kubeconfig ? 1 : 0
-  content    = data.digitalocean_kubernetes_cluster.primary.kube_config[0].raw_config
+  content    = var.primary_cluster.raw_config
   filename   = "${path.root}/kubeconfig"
 }
 
 provider "kubernetes" {
-  host             = data.digitalocean_kubernetes_cluster.primary.endpoint
-  token            = data.digitalocean_kubernetes_cluster.primary.kube_config[0].token
-  cluster_ca_certificate = base64decode(
-    data.digitalocean_kubernetes_cluster.primary.kube_config[0].cluster_ca_certificate
-  )
+  host                   = var.primary_cluster.endpoint
+  token                  = var.primary_cluster.token
+  cluster_ca_certificate = base64decode(var.primary_cluster.cluster_ca_certificate)
 }
 
 provider "helm" {
   kubernetes {
-    host  = data.digitalocean_kubernetes_cluster.primary.endpoint
-    token = data.digitalocean_kubernetes_cluster.primary.kube_config[0].token
-    cluster_ca_certificate = base64decode(
-      data.digitalocean_kubernetes_cluster.primary.kube_config[0].cluster_ca_certificate
-    )
+    host                   = var.primary_cluster.endpoint
+    token                  = var.primary_cluster.token
+    cluster_ca_certificate = base64decode(var.primary_cluster.cluster_ca_certificate)
   }
 }
 
@@ -113,9 +105,20 @@ resource "helm_release" "nginx_ingress" {
   repository = "https://charts.bitnami.com/bitnami"
   chart      = "nginx-ingress-controller"
 
+  # Helm chart deployment can sometimes take longer than the default 5 minutes
+  timeout    = var.nginx_ingress_helm_timeout_seconds
+
   set {
     name  = "service.type"
     value = "LoadBalancer"
+  }
+  set {
+    name  = "service.annotations.service\\.beta\\.kubernetes\\.io/do-loadbalancer-name"
+    value = var.primary_cluster.name
+  }
+  set {
+    name  = "service.annotations.service\\.beta\\.kubernetes\\.io/do-loadbalancer-size-slug"
+    value = "lb-small"
   }
 }
 
@@ -143,5 +146,15 @@ resource "kubernetes_ingress" "test_ingress" {
         }
       }
     }
+  }
+}
+
+data "kubernetes_service" "nginx-ingress-controller" {  
+  depends_on = [
+    helm_release.nginx_ingress
+  ]
+  metadata {
+    name      = "nginx-ingress-controller"
+    namespace = kubernetes_namespace.test.metadata.0.name
   }
 }

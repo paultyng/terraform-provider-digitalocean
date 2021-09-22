@@ -1,3 +1,10 @@
+variable "cluster_name" {
+  default = "test-cluster"
+}
+
+variable "cluster_region" {
+  default = "nyc3"
+}
 
 variable "cluster_version" {
   default = "1.19"

@@ -26,4 +26,11 @@ resource "digitalocean_kubernetes_cluster" "primary" {
     size       = var.worker_size
     node_count = var.worker_count
   }
+
+  # Ignore the tags/labels added by DigitalOcean
+  lifecycle {
+    ignore_changes = [
+      tags, node_pool["labels"], node_pool["tags"]
+    ]
+  }
 }
