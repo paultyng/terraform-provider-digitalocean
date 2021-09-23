@@ -113,6 +113,9 @@ resource "helm_release" "nginx_ingress" {
   repository = "https://charts.bitnami.com/bitnami"
   chart      = "nginx-ingress-controller"
 
+  # Helm chart deployment can sometimes take longer than the default 5 minutes
+  timeout    = var.nginx_ingress_helm_timeout_seconds
+
   set {
     name  = "service.type"
     value = "LoadBalancer"
