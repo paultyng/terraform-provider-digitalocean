@@ -119,6 +119,16 @@ resource "helm_release" "nginx_ingress" {
   }
 }
 
+data "kubernetes_service" "nginx-ingress-controller" {
+  depends_on = [
+    helm_release.nginx_ingress
+  ]
+  metadata {
+    name      = "nginx-ingress-controller"
+    namespace = kubernetes_namespace.test.metadata.0.name
+  }
+}
+
 resource "kubernetes_ingress" "test_ingress" {
   wait_for_load_balancer = true
   metadata {
