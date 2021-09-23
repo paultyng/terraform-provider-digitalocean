@@ -158,6 +158,13 @@ func resourceDigitalOceanDroplet() *schema.Resource {
 				},
 			},
 
+			"force_override_userdata": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  false,
+			},
+
 			"user_data": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -166,6 +173,9 @@ func resourceDigitalOceanDroplet() *schema.Resource {
 				StateFunc:    HashStringStateFunc(),
 				// In order to support older statefiles with fully saved user data
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if d.Get("force_override_userdata").(bool) {
+						return true
+					}
 					return new != "" && old == d.Get("user_data")
 				},
 			},
