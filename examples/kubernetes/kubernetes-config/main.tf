@@ -117,6 +117,10 @@ resource "helm_release" "nginx_ingress" {
     name  = "service.type"
     value = "LoadBalancer"
   }
+  set {
+    name  = "service.annotations.service\\.beta\\.kubernetes\\.io/do-loadbalancer-name"
+    value = var.cluster_name
+  }
 }
 
 resource "kubernetes_ingress" "test_ingress" {
