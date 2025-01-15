@@ -191,6 +191,12 @@ func ResourceDigitalOceanKubernetesCluster() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+
+			"kubeconfig_expire_seconds": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntAtLeast(0),
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -424,7 +430,10 @@ func digitaloceanKubernetesClusterRead(
 		}
 	}
 	if expiresAt.IsZero() || expiresAt.Before(time.Now()) {
-		creds, _, err := client.Kubernetes.GetCredentials(context.Background(), cluster.ID, &godo.KubernetesClusterCredentialsGetRequest{})
+		expireSeconds := d.Get("kubeconfig_expire_seconds").(int)
+		creds, _, err := client.Kubernetes.GetCredentials(context.Background(), cluster.ID, &godo.KubernetesClusterCredentialsGetRequest{
+			ExpirySeconds: &expireSeconds,
+		})
 		if err != nil {
 			return diag.Errorf("Unable to fetch Kubernetes credentials: %s", err)
 		}
