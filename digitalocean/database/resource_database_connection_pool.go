@@ -101,6 +101,13 @@ func ResourceDigitalOceanDatabaseConnectionPool() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
+			// doesn't create a connection pool if it already exists.
+			// only use if terraform returned a 5xx on a previous create request that successfully created a pool.
+			"skip_if_exists": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -115,6 +122,15 @@ func resourceDigitalOceanDatabaseConnectionPoolCreate(ctx context.Context, d *sc
 		Mode:     d.Get("mode").(string),
 		Size:     d.Get("size").(int),
 		Database: d.Get("db_name").(string),
+	}
+
+	skipIfExists := d.Get("skip_if_exists").(bool)
+	if skipIfExists {
+		pool, _, err := client.Databases.GetPool(context.Background(), clusterID, opts.Name)
+		if err == nil {
+			log.Printf("[INFO] DatabaseConnectionPool Create Request Skipped because skipIfExists argument is passed and DatabaseConnectionPool already exists: %s", pool.Name)
+			return resourceDigitalOceanDatabaseConnectionPoolRead(ctx, d, meta)
+		}
 	}
 
 	log.Printf("[DEBUG] DatabaseConnectionPool create configuration: %#v", opts)
