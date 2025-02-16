@@ -222,9 +222,11 @@ func resourceDigitalOceanVolumeRead(ctx context.Context, d *schema.ResourceData,
 	}
 	if v := volume.FilesystemType; v != "" {
 		d.Set("filesystem_type", v)
+		d.Set("initial_filesystem_type", v)
 	}
 	if v := volume.FilesystemLabel; v != "" {
 		d.Set("filesystem_label", v)
+		d.Set("initial_filesystem_label", v)
 	}
 
 	if err = d.Set("droplet_ids", flattenDigitalOceanVolumeDropletIds(volume.DropletIDs)); err != nil {
