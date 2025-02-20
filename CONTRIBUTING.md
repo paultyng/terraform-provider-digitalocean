@@ -197,15 +197,19 @@ The dedicated DigitalOcean team is responsible for releasing the provider.
    git push "$origin" tag "$new_version"
    ```
 
-This repository contains a GitHub Action configured to automatically build and
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;This repository contains a GitHub Action configured to automatically build and
 publish assets for release when a tag is pushed that matches the pattern `v*`
 (ie. `v0.1.0`).
 
-A [Goreleaser](https://goreleaser.com/) configuration is provided that produces
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;A [Goreleaser](https://goreleaser.com/) configuration is provided that produces
 build artifacts matching the [layout required](https://www.terraform.io/docs/registry/providers/publishing.html#manually-preparing-a-release)
 to publish the provider in the Terraform Registry.
 
-Releases will appear as drafts. Once marked as published on the GitHub Releases page,
+6. Publish the release.  
+A new release will appear as drafts.  
+Hit "Generate Release Notes" when publish the release.  
+Mark the release as Latest.  
+Once marked as published on the GitHub Releases page,
 they will become available via the Terraform Registry.
 
 Reviewing Pull Requests
